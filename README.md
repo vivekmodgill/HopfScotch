@@ -25,8 +25,9 @@ If you use this code, please cite the preprint:
 ```
 (Citation will be updated with the final published reference upon acceptance.)
 ## Contact
-Vivek Sharma — vivek.sharma@donders.ru.nl
-Joana Cabral — joanabcabral@tecnico.ulisboa.pt
-Donders Institute for Brain, Cognition and Behaviour, Radboud University, Nijmegen, Netherlands
+Vivek Sharma vivek.sharma@donders.ru.nl
+Joana Cabral joanabcabral@tecnico.ulisboa.pt \
+Donders Institute for Brain, Cognition and Behaviour, Radboud University, Nijmegen, Netherlands \
+Department of Bioengineering and Institute of Systems and Robotics, LARSyS – Laboratory for Robotics and Engineering Systems, Instituto Superior Tecnico, University of Lisbon, Lisbon, Portugal
 ## License
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License: see [LICENSE](LICENSE) for details.
