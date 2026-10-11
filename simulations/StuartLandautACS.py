@@ -34,12 +34,15 @@ def generate_waveform(shape, time, F0, freq, duty_cycle=0.5):
         )
 
     elif shape == 1:  # Square, bipolar, 90-degree quadrature
-        if np.sin(2.0 * np.pi * freq * t_s) >= 0.0:
+        # real part follows cos, imaginary part follows sin, so the
+        # forcing rotates counter-clockwise like cos + i sin (and like the
+        # oscillators, whose intrinsic rotation is +i*w).
+        if np.cos(2.0 * np.pi * freq * t_s) >= 0.0:
             real = 1.0
         else:
             real = -1.0
 
-        if np.cos(2.0 * np.pi * freq * t_s) >= 0.0:
+        if np.sin(2.0 * np.pi * freq * t_s) >= 0.0:
             imag = 1.0
         else:
             imag = -1.0
@@ -47,8 +50,10 @@ def generate_waveform(shape, time, F0, freq, duty_cycle=0.5):
         return F0 * (real + 1j * imag)
 
     elif shape == 2:  # True triangular, 90-degree quadrature
+        # the imaginary part must LAG the real part by a quarter
+        # cycle (phase - 0.25), as sin lags cos.
         real = triangle_wave(phase)
-        imag = triangle_wave((phase + 0.25) % 1.0)
+        imag = triangle_wave((phase - 0.25) % 1.0)
         return F0 * (real + 1j * imag)
 
     elif shape == 3:  # Pulsed sinusoid
@@ -63,8 +68,9 @@ def generate_waveform(shape, time, F0, freq, duty_cycle=0.5):
             return 0.0 + 0.0j
 
     elif shape == 4:  # Centred sawtooth, 90-degree quadrature
+        # quarter-cycle lag (phase - 0.25), as for the triangle.
         real = sawtooth_wave(phase)
-        imag = sawtooth_wave((phase + 0.25) % 1.0)
+        imag = sawtooth_wave((phase - 0.25) % 1.0)
         return F0 * (real + 1j * imag)
 
     else:
@@ -92,12 +98,12 @@ def simulate_SL_with_tACS(t_len, W_mat, sim_time, store_time, dt, dt_save, a_bif
         delays    = delays.astype(np.int64)
 
     state       = b * np.random.rand(n, max_delay + 1) + b * 1j * np.random.rand(n, max_delay + 1)
-    output      = np.zeros((n, int(np.floor(store_time / dt_save))), dtype=np.complex_)
+    output      = np.zeros((n, int(np.floor(store_time / dt_save))), dtype=np.complex128)
     store_count = 0
 
     # Generate perturbation signal
     time_values  = np.arange(0, sim_time, dt)
-    perturbation = np.zeros_like(time_values, dtype=np.complex_)
+    perturbation = np.zeros_like(time_values, dtype=np.complex128)
 
     for k in range(time_values.shape[0]):
         if t_perturb <= time_values[k] < t_perturb + perturb_duration:
@@ -106,7 +112,7 @@ def simulate_SL_with_tACS(t_len, W_mat, sim_time, store_time, dt, dt_save, a_bif
 
     for st in range(int(np.floor(sim_time / dt))):
         curr_z        = state[:, -1].copy().reshape(n, 1)
-        delayed_input = np.zeros_like(curr_z, dtype=np.complex_)
+        delayed_input = np.zeros_like(curr_z, dtype=np.complex128)
 
         for i in range(n):
             for j in range(n):
@@ -117,7 +123,7 @@ def simulate_SL_with_tACS(t_len, W_mat, sim_time, store_time, dt, dt_save, a_bif
 
         # Apply perturbation
         time_in_ms = st * dt
-        index      = int(time_in_ms / dt)
+        index      = st   # was int(time_in_ms / dt), which can round down by one step
         if t_perturb <= time_in_ms < t_perturb + perturb_duration:
             for node in perturbed_nodes:
                 dz_base[node] += perturbation[index]
@@ -133,4 +139,3 @@ def simulate_SL_with_tACS(t_len, W_mat, sim_time, store_time, dt, dt_save, a_bif
                 store_count += 1
 
     return output
-
